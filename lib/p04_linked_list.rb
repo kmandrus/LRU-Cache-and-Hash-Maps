@@ -18,6 +18,7 @@ class Node
     # and removes self from list.
     @prev.next = @next
     @next.prev = @prev
+    return self
   end
 end
 
@@ -57,12 +58,11 @@ class LinkedList
   end
 
   def append(key, val)
-    unless include?(key)
-      new_last = Node.new(key, val)
-      old_last = (empty? ? @head : last)
-      old_last.next, new_last.next = new_last, @tail
-      new_last.prev, @tail.prev = old_last, new_last
-    end
+    new_last = Node.new(key, val)
+    old_last = (empty? ? @head : last)
+    old_last.next, new_last.next = new_last, @tail
+    new_last.prev, @tail.prev = old_last, new_last
+    return new_last
   end
 
   def update(key, val)
@@ -70,7 +70,12 @@ class LinkedList
   end
 
   def remove(key)
-    each { |node| node.remove if node.key == key }
+    each do |node| 
+      if node.key == key
+        node.remove 
+        return node
+      end
+    end
   end
 
   def each(&prc)
