@@ -77,26 +77,23 @@ class DynamicArray
 
   def shift
     return nil if empty?
-    first_ele = first
+    first_element = first
     @store[@start_idx] = nil
-    @count -= 1
     @start_idx = ring_add(@start_idx, 1)
-    first_ele
+    @count -= 1
+    first_element
   end
 
   def first
-    empty? ? nil : @store[@start_idx]
+    @store[@start_idx]
   end
 
   def last
-    empty? ? nil : @store[end_idx]
+    @store[end_idx]
   end
 
   def empty?
     count == 0
-  end
-  def full?
-    count == capacity
   end
 
   def each(&prc)
