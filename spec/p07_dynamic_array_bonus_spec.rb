@@ -1,5 +1,6 @@
 require 'rspec'
 require 'p07_dynamic_array_bonus'
+require 'byebug'
 
 describe DynamicArray do
   let(:arr) { DynamicArray.new(3) }
@@ -172,6 +173,11 @@ describe DynamicArray do
   end
 
   describe "#==" do
+    let(:dyn_arr) do
+      a = DynamicArray.new
+      a[2] = 0
+      a
+    end
     it "should return false unless the object is an array" do
       expect(arr).not_to eq({})
       arr.push(1)
@@ -188,6 +194,9 @@ describe DynamicArray do
       end
       expect(arr).to eq(real_arr)
       expect(arr).to eq(other_dyna)
+
+      other_arr = [nil, nil, 0]
+      expect(dyn_arr).to eq(other_arr)
 
       real_arr[2] = 4
       expect(arr).not_to eq(real_arr)
@@ -222,7 +231,7 @@ describe DynamicArray do
 
       (1..100).each { |n| arr.push(n) }
       expect(arr[-6]).to eq(95)
-
+      
       arr[-1] = 200
       expect(arr[99]).to eq(200)
     end
