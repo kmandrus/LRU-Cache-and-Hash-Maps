@@ -35,81 +35,77 @@ class DynamicArray
   def initialize(capacity = 8)
     @store = StaticArray.new(capacity)
     @count = 0
+    @start_idx = capacity / 2
   end
 
-  def [](i)
+  def [](i) 
     return nil if i >= count || i < -count
-    return @store[i % count] if i < 0 && i >= -count
-    @store[i]
+    @store[ring_idx(i)]
   end
 
   def []=(i, val)
-    resize! until capacity > i if i >= capacity
+    validate!(i)
+    resize! until capacity > i
     @count = i + 1 if i > count
-    raise "Out of Bounds" if i < -count
-    if i < 0 && i >= -count
-      @store[i % count] = val 
-    else
-      @store[i] = val
-    end
+    @store[ring_idx(i)] = val
   end
 
   def capacity
     @store.length
   end
 
-  def include?(val)
-    any? { |ele| ele == val }
-  end
-
   def push(val)
     resize! if resize_needed?
-    @store[count] = val
+    @store[ring_idx(count)] = val
     @count += 1
   end
 
   def unshift(val)
     resize! if resize_needed?
-    i = count
-    while i > 0
-      @store[i] = @store[i-1]
-      i -= 1
-    end
-    @store[0] = val
+    @start_idx = ring_add(@start_idx, -1)
+    @store[start_idx] = val
     @count += 1
   end
 
   def pop
     return nil if empty?
-    ele = last
+    last_element = last
+    @store[end_idx] = nil
     @count -= 1
-    @store[count] = nil
-    ele
+    last_element
   end
 
   def shift
     return nil if empty?
-    ele = first
+    first_ele = first
+    @store[@start_idx] = nil
     @count -= 1
-    (0...count).each { |i| @store[i] = @store[i+1] }
-    @store[count] = nil
-    ele
+    @start_idx = ring_add(@start_idx, 1)
+    first_ele
   end
 
   def first
-    empty? ? nil : @store[0]
+    empty? ? nil : @store[@start_idx]
   end
 
   def last
-    empty? ? nil : @store[count - 1]
+    empty? ? nil : @store[end_idx]
   end
 
   def empty?
     count == 0
   end
+  def full?
+    count == capacity
+  end
 
   def each(&prc)
-    (0...count).each { |i| prc.call(@store[i]) }
+    i = start_idx
+    until i == end_idx
+      prc.call(@store[i])
+      i = ring_add(i, 1)
+    end
+    prc.call(@store[end_idx])
   end
 
   def to_s
@@ -127,16 +123,48 @@ class DynamicArray
   [:length, :size].each { |method| alias_method method, :count }
 
   private
+  attr_accessor :start_idx
+
+  def end_idx
+    return start_idx if empty?
+    ring_add(start_idx, count, -1)
+  end
+
+  def ring_idx(i)
+    validate!(i)
+    return start_idx if i == 0
+    if negative_index?(i)
+      ring_add(start_idx, (i % count))
+    else
+      ring_add(start_idx, i)
+    end
+  end
+
+  def negative_index?(i)
+    i < 0 && i >= -count
+  end
+
+  def validate!(i)
+    raise "Out of Bounds" if i < -count
+  end
 
   def resize!
     new_store = StaticArray.new(capacity * 2)
-    (0...count).each do |i|
-      new_store[i] = @store[i]
+    new_start_idx = new_store.length / 2
+    i = new_start_idx
+    each do |ele|
+      new_store[i] = ele
+      i = (i + 1) % new_store.length
     end
+    @start_idx = new_start_idx
     @store = new_store
   end
 
   def resize_needed?
     count == capacity
+  end
+
+  def ring_add(*vals)
+    vals.sum % capacity
   end
 end
